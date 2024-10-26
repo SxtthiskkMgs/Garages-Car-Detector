@@ -1,0 +1,53 @@
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Playfair Display";
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+/* Style for the parking status dot */
+.status-dot {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: grey; /* Default color */
+    display: inline-block;
+    margin-left: 10px;
+}
+
+/* Style for the dashboard section */
+#Dashboard {
+    text-align: center;
+}
+
+.carmap img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Footer styles */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f1f1f1;
+}
+
+/* Parent container for the status */
+.status {
+    position: relative; /* Ensure the parent container is positioned */
+    display: inline-block; /* Adjust display if needed */
+}
+
+/* Style for the parking status dot */
+.status-dot {
+    height: 50px;
+    width: 50px;
+    border-radius: 70%;
+    background-color: grey; /* Default color */
+    position: absolute;  /* Use absolute positioning */
+    top: 350px;  /* Adjust to move the dot vertically */
+    left: -167px;  /* Adjust to move the dot horizontally */
+}

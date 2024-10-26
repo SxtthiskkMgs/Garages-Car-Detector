@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<title>esp.firebase</title>
+<link rel="shortcut icon" href="IMG/eeeg.ico">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Link to external stylesheet -->
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+<link rel="stylesheet" href="style.css"> <!-- Separate CSS file -->
+
+<body>
+    <!-- Navbar (sit on top) -->
+    <div class="w3-top">
+        <div class="w3-bar w3-white w3-wide w3-padding-8 w3-card-2">
+            <a href="#home" class="w3-bar-item w3-button w3-margin-left">IoT</a>
+            <div class="w3-right w3-hide-small">
+                <a href="#Dashboard" class="w3-bar-item w3-button w3-margin-right">Head</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="w3-display-container w3-content w3-wide" style="max-width:1600px;min-width:500px" id="home">
+        <div class="w3-display-bottomleft w3-padding-xlarge w3-opacity">
+            <h1 class="w3-xxlarge">Dek AI Bodin2 ♥</h1>
+        </div>
+    </header>
+
+    <!-- Section for showing parking status -->
+    <div class="w3-container w3-padding-64" id="Dashboard">
+        <h3><i class="fa fa-rss" aria-hidden="true"></i> Bodin2 Garage (prototype)</h3>
+        <div class="status">
+            <span>Parking Status:</span>
+            <span class="status-dot" id="PARKING_STATUS"></span> <!-- Dot that changes color -->
+        </div>
+        <div class="carmap">
+            <img src="images/carmap.png">
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmad6igY0ff-AaxxiP34TNfJTud2xHaDI",
+            authDomain: "car-detection-20f39.firebaseapp.com",
+            databaseURL: "https://car-detection-20f39-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "car-detection-20f39",
+            storageBucket: "car-detection-20f39.appspot.com",
+            messagingSenderId: "816470318545",
+            appId: "1:816470318545:web:45a244bb9000ad1b6094f0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Function to update parking status on the web page
+        const statusElement = document.getElementById("PARKING_STATUS");
+
+        // Reference to the "PARKING_STATUS" data in Firebase
+        const statusRef = ref(database, "/PARKING_STATUS");
+
+        // Listen for value changes in the database
+        onValue(statusRef, (snapshot) => {
+            const status = snapshot.val();
+            
+            // Update dot color based on status
+            if (status === "Parking available") {
+                statusElement.style.backgroundColor = "green";  // Green for available
+            } else if (status === "Parking unavailable") {
+                statusElement.style.backgroundColor = "red";    // Red for unavailable
+            }
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="w3-center w3-light-grey w3-padding-32">
+        <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-text-green">w3.css</a></p>
+        <p>Developed by Sutthisak Muangsai</p>
+    </footer>
+</body>
+</html>
