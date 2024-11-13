@@ -4,24 +4,26 @@
 #include "addons/RTDBHelper.h"   // Helper functions to debug Realtime Database
 
 // Your Wi-Fi credentials
-#define WIFI_SSID "1"
-#define WIFI_PASSWORD "1"
+#define WIFI_SSID "xd"
+#define WIFI_PASSWORD "00000000"
 
 // Your Firebase credentials
 #define API_KEY "AIzaSyBmad6igY0ff-AaxxiP34TNfJTud2xHaDI"
 #define DATABASE_URL "https://car-detection-20f39-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 // Ultrasonic sensor pins
-#define TRIG_PIN 2
-#define ECHO_PIN 4
+#define TRIG_PIN1 2
+#define ECHO_PIN1 4
+#define TRIG_PIN2 16
+#define ECHO_PIN2 17
+#define TRIG_PIN3 5
+#define ECHO_PIN3 18
 
 // Firebase objects
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-unsigned long sendDataPrevMillis = 0;
-int count = 0;
 bool signupOK = false;
 
 void setup() {
@@ -29,26 +31,28 @@ void setup() {
   delay(1000);
 
   // Initialize ultrasonic sensor pins
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  pinMode(TRIG_PIN1, OUTPUT);
+  pinMode(ECHO_PIN1, INPUT);
+  pinMode(TRIG_PIN2, OUTPUT);
+  pinMode(ECHO_PIN2, INPUT);
+  pinMode(TRIG_PIN3, OUTPUT);
+  pinMode(ECHO_PIN3, INPUT);
 
   // Connect to WiFi
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to WiFi ");
-
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
   }
-
-  Serial.println();
-  Serial.println("Connected to WiFi");
+  Serial.println("\nConnected to WiFi");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
   // Set up Firebase configuration
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
+  config.token_status_callback = tokenStatusCallback;  // Debug token generation
 
   // Sign up anonymously for Firebase authentication
   if (Firebase.signUp(&config, &auth, "", "")) {
@@ -58,14 +62,10 @@ void setup() {
     Serial.printf("Sign-up error: %s\n", config.signer.signupError.message.c_str());
   }
 
-  // Assign the callback function for token generation
-  config.token_status_callback = tokenStatusCallback;  // Debug token generation
-
   // Initialize Firebase
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 
-  // Check Firebase initialization status
   if (Firebase.ready()) {
     Serial.println("Firebase initialized successfully.");
   } else {
@@ -74,50 +74,52 @@ void setup() {
   }
 }
 
+long readDistance(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long duration = pulseIn(echoPin, HIGH);
+  return (duration * 0.0343) / 2;  // Distance in cm
+}
+
+void updateFirebase(String path, String status) {
+  if (Firebase.RTDB.setString(&fbdo, path, status)) {
+    Serial.println("Status updated: " + path + " - " + status);
+  } else {
+    Serial.println("Failed to update status in Firebase.");
+    Serial.println(fbdo.errorReason());  // Print error reason
+  }
+}
+
 void loop() {
-  // Check WiFi status
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi connection lost, reconnecting...");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    delay(5000);  // Wait for 5 seconds to reconnect
+    delay(5000);
   }
 
-  // Check Firebase status
   if (!Firebase.ready()) {
     Serial.println("Firebase not ready yet.");
-    delay(2000);  // Wait before retrying
+    delay(2000);
     return;
   }
 
-  // Read distance from ultrasonic sensor
-  long duration, distance;
-  digitalWrite(TRIG_PIN, LOW);  // TRIG_PIN
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-  duration = pulseIn(ECHO_PIN, HIGH);  // ECHO_PIN
-  distance = (duration * 0.0343) / 2;
+  // Read distances from each ultrasonic sensor
+  long distance1 = readDistance(TRIG_PIN1, ECHO_PIN1);
+  long distance2 = readDistance(TRIG_PIN2, ECHO_PIN2);
+  long distance3 = readDistance(TRIG_PIN3, ECHO_PIN3);
 
-  // Print distance to Serial Monitor
-  Serial.println("Distance: " + String(distance) + " cm");
+  // Determine parking status based on distance
+  String status1 = (distance1 > 30) ? "Parking available" : "Parking unavailable";
+  String status2 = (distance2 > 30) ? "Parking available" : "Parking unavailable";
+  String status3 = (distance3 > 30) ? "Parking available" : "Parking unavailable";
 
-  // Check distance and update Firebase based on availability
-  String parkingStatus;
-  
-  if (distance > 100) {
-    parkingStatus = "Parking available";
-  } else {
-    parkingStatus = "Parking unavailable";
-  }
+  // Update each parking status in Firebase
+  updateFirebase("/PARKING_STATUS/Sensor1", status1);
+  updateFirebase("/PARKING_STATUS/Sensor2", status2);
+  updateFirebase("/PARKING_STATUS/Sensor3", status3);
 
-  // Send the parking status to Firebase
-  if (Firebase.RTDB.setString(&fbdo, "/PARKING_STATUS", parkingStatus)) {
-    Serial.println("Parking status updated: " + parkingStatus);
-  } else {
-    Serial.println("Failed to update parking status in Firebase.");
-    Serial.println(fbdo.errorReason());  // Print error reason
-  }
-
-  delay(999);  // Wait for 1 seconds before the next reading
+  delay(1000);  // Wait for 1 second before the next reading
 }
