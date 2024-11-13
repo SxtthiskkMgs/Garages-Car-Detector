@@ -1,14 +1,43 @@
 <!DOCTYPE html>
 <html>
-<title>esp.firebase</title>
-<link rel="shortcut icon" href="IMG/eeeg.ico">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Link to external stylesheet -->
-<link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
-<link rel="stylesheet" href="style.css"> <!-- Separate CSS file -->
-
+<head>
+    <title>ESP Firebase Parking System</title>
+    <link rel="shortcut icon" href="IMG/eeeg.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Link to external stylesheets -->
+    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
+    <link rel="stylesheet" href="style.css"> <!-- Separate CSS file -->
+    <style>
+        .garage-layout {
+            position: relative;
+            display: inline-block;
+        }
+        .status-dot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: absolute;
+        }
+        /* Position the dots based on the parking spots */
+        #sensor1 {
+            background-color: red; /* Default color, change dynamically */
+            top: 60px;  /* Adjust based on your layout */
+            left: 30px; /* Adjust based on your layout */
+        }
+        #sensor2 {
+            background-color: red;
+            top: 60px;
+            left: 135px;
+        }
+        #sensor3 {
+            background-color: red;
+            top: 60px;
+            left: 250px;
+        }
+    </style>
+</head>
 <body>
     <!-- Navbar (sit on top) -->
     <div class="w3-top">
@@ -30,18 +59,20 @@
     <!-- Section for showing parking status -->
     <div class="w3-container w3-padding-64" id="Dashboard">
         <h3><i class="fa fa-rss" aria-hidden="true"></i> Bodin2 Garage (prototype)</h3>
-        <div class="status">
-            <span>Parking Status:</span>
-            <span class="status-dot" id="PARKING_STATUS"></span> <!-- Dot that changes color -->
-        </div>
-        <div class="carmap">
-            <img src="images/carmap.png">
+
+        <!-- Garage Layout with Dots -->
+        <div class="garage-layout">
+            <img src="images/carmap.png" alt="Garage Layout">
+            <!-- Status dots for each sensor -->
+            <div class="status-dot" id="sensor1"></div>
+            <div class="status-dot" id="sensor2"></div>
+            <div class="status-dot" id="sensor3"></div>
         </div>
     </div>
 
     <!-- Firebase Configuration -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
+        // Import Firebase SDK functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
@@ -60,28 +91,34 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // Function to update parking status on the web page
-        const statusElement = document.getElementById("PARKING_STATUS");
+        // Function to update sensor status on the web page
+        function updateStatus(elementId, status) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.style.backgroundColor = (status === "Parking available") ? "green" : "red";
+        }
 
-        // Reference to the "PARKING_STATUS" data in Firebase
-        const statusRef = ref(database, "/PARKING_STATUS");
+        // References to each sensor's data in Firebase
+        const sensor1Ref = ref(database, "/PARKING_STATUS/Sensor1");
+        const sensor2Ref = ref(database, "/PARKING_STATUS/Sensor2");
+        const sensor3Ref = ref(database, "/PARKING_STATUS/Sensor3");
 
-        // Listen for value changes in the database
-        onValue(statusRef, (snapshot) => {
-            const status = snapshot.val();
-            
-            // Update dot color based on status
-            if (status === "Parking available") {
-                statusElement.style.backgroundColor = "green";  // Green for available
-            } else if (status === "Parking unavailable") {
-                statusElement.style.backgroundColor = "red";    // Red for unavailable
-            }
+        // Listen for value changes for each sensor
+        onValue(sensor1Ref, (snapshot) => {
+            updateStatus("sensor1", snapshot.val());
+        });
+        
+        onValue(sensor2Ref, (snapshot) => {
+            updateStatus("sensor2", snapshot.val());
+        });
+
+        onValue(sensor3Ref, (snapshot) => {
+            updateStatus("sensor3", snapshot.val());
         });
     </script>
 
     <!-- Footer -->
     <footer class="w3-center w3-light-grey w3-padding-32">
-        <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" title="W3.CSS" target="_blank" class="w3-hover-text-green">w3.css</a></p>
+        <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank" class="w3-hover-text-green">w3.css</a></p>
         <p>Developed by Sutthisak Muangsai</p>
     </footer>
 </body>
