@@ -5,7 +5,7 @@
 
 // Your Wi-Fi credentials
 #define WIFI_SSID "xd"
-#define WIFI_PASSWORD "00000000"
+#define WIFI_PASSWORD "11111111"
 
 // Your Firebase credentials
 #define API_KEY "AIzaSyBmad6igY0ff-AaxxiP34TNfJTud2xHaDI"
